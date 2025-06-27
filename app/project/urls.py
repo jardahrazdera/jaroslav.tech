@@ -11,9 +11,9 @@ def home_view(request):
     <html>
         <head><title>Welcome!</title></head>
         <body style='font-family: sans-serif; text-align: center; margin-top: 5em;'>
-            <h1>It Works!</h1>
-            <p>Your Django application is running successfully behind the Nginx proxy.</p>
-            <p>This is your new, scalable architecture.</p>
+            <h1>It Just Works!</h1>
+            <p>My Django application is running successfully behind the Nginx proxy.</p>
+            <p>This is my new, scalable architecture.</p>
         </body>
     </html>
     """
