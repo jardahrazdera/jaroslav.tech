@@ -1,0 +1,67 @@
+# /srv/jaroslav.tech/docker-compose.yml
+# This Compose file manages the jaroslav.tech Django application.
+# It is designed to run behind the separate proxy service.
+
+services:
+  # The Django application service
+  app:
+    # Specifies that the build context and Dockerfile are in the ./app directory
+    build: ./app
+    # A static container name so the proxy can always find it
+    container_name: jaroslav_tech_app
+    restart: unless-stopped
+    # The command to run the production server
+    command: gunicorn project.wsgi:application --bind 0.0.0.0:8000
+    volumes:
+      # Mounts the application code for development and for collectstatic to work
+      - ./app:/app
+    expose:
+      # Exposes port 8000 only to other containers in the same network
+      - "8000"
+    environment:
+      # Loads sensitive data from the .env file in the same directory
+      - SECRET_KEY=${SECRET_KEY}
+      - DEBUG=${DEBUG}
+      - DATABASE_URL=postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
+    depends_on:
+      # Ensures the database is healthy before the app starts
+      db:
+        condition: service_healthy
+    networks:
+      # Connects to the internal default network for this project
+      - default
+      # Connects to the shared external network to communicate with the proxy
+      - proxy-net
+
+  # The database service
+  db:
+    image: postgres:15-alpine
+    container_name: jaroslav_tech_db
+    restart: unless-stopped
+    volumes:
+      # Persists database data in a named volume
+      - postgres_data:/var/lib/postgresql/data/
+    environment:
+      - POSTGRES_DB=${POSTGRES_DB}
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+    expose:
+      - "5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+    networks:
+      # The database is only on the internal network, not exposed to the proxy
+      - default
+
+# Defines the named volume for the database
+volumes:
+  postgres_data:
+
+# Defines the networks used in this file
+networks:
+  # The default network is created automatically for this project
+  default:
+  # Specifies that proxy-net is an existing, external network
+  proxy-net:
+    external: true
+
