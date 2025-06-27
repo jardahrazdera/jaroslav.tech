@@ -1,0 +1,62 @@
+# File: .github/workflows/deploy.yml
+
+# A name for this workflow, which will appear in the GitHub Actions tab
+name: Deploy Django Project to Production
+
+# This workflow runs automatically on every push to the 'main' branch
+on:
+  push:
+    branches: [ "main" ]
+
+# Defines the sequence of jobs to be executed
+jobs:
+  deploy:
+    # The workflow will run on a fresh, virtual machine hosted by GitHub
+    runs-on: ubuntu-latest
+
+    # The sequence of tasks for this job
+    steps:
+      # Step 1: Checks out your repository's code, so the workflow can access it.
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # Step 2: Executes commands on your remote server via SSH.
+      - name: Deploy to Server
+        # We use a popular and trusted third-party action for SSH
+        uses: appleboy/ssh-action@master
+        with:
+          # These values are securely fetched from your repository's secrets
+          host: ${{ secrets.HOST }}
+          username: ${{ secrets.USERNAME }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          
+          # The script that will be executed on your production server
+          script: |
+            # Navigate to the Django project directory
+            cd /srv/jaroslav.tech
+            
+            # Pull the latest changes from the 'main' branch on GitHub
+            echo "--- Pulling latest code from GitHub ---"
+            git pull origin main
+            
+            # Rebuild and restart the services, focusing on the 'app' container
+            echo "--- Rebuilding and restarting containers ---"
+            docker compose up -d --build
+            
+            # Wait a moment for the app container to be fully up
+            sleep 5
+            
+            # Apply any new database migrations automatically
+            echo "--- Applying database migrations ---"
+            docker compose exec app python manage.py migrate --noinput
+            
+            # Collect any new or modified static files for Nginx
+            echo "--- Collecting static files ---"
+            docker compose exec app python manage.py collectstatic --noinput
+            
+            # Optional but recommended: Clean up old, unused Docker images
+            echo "--- Pruning old Docker images ---"
+            docker image prune -af
+            
+            echo "--- Deployment successful! ---"
+
