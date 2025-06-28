@@ -1,15 +1,14 @@
-# File: /srv/jaroslav.tech/docker-compose.yml
-# FINAL VERSION for the flat project structure
+# /srv/jaroslav.tech/docker-compose.yml
+# FINAL WORKING VERSION
 
 services:
   app:
-    # Build using the Dockerfile in the current directory '.'
     build: .
     container_name: jaroslav_tech_app
     restart: unless-stopped
-    command: gunicorn project.wsgi:application --bind 0.0.0.0:8000
+    # The 'command' directive is now removed.
+    # The container will use the CMD from its Dockerfile.
     volumes:
-      # Mount the entire current directory into the container
       - .:/home/app
     expose:
       - "8000"
