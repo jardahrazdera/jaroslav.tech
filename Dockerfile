@@ -17,8 +17,12 @@ WORKDIR /app
 # Copy only the dependency definition files
 COPY pyproject.toml poetry.lock ./
 
+# --- THIS IS THE CRITICAL FIX ---
+# Configure Poetry to create the virtualenv inside the project directory (.venv)
+RUN poetry config virtualenvs.in-project true
+
 # Install only the project dependencies, not the project itself
-# The --no-root flag is the critical fix
+# Now, Poetry will create the .venv folder in the current directory (/app)
 RUN poetry install --only main --no-interaction --no-ansi --no-root
 
 
