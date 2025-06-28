@@ -1,5 +1,5 @@
 # File: Dockerfile
-# A radically simplified, single-stage version for maximum reliability.
+# A truly simplified, single-stage version for maximum reliability.
 
 FROM python:3.11-slim-bullseye
 
@@ -19,15 +19,28 @@ WORKDIR /app
 # Configure Poetry to create the virtual environment inside the project directory (.venv)
 RUN poetry config virtualenvs.in-project true
 
-# Copy all project files from your local machine into the container's working directory
-COPY . .
+# Copy only the dependency files first to leverage Docker's layer cache
+COPY pyproject.toml poetry.lock ./
 
 # Install Python dependencies using the poetry.lock file.
-# This command will create the /app/.venv directory with all packages.
+# This command will now correctly create the /app/.venv directory.
 RUN poetry install --only main --no-interaction --no-ansi --no-root
+
+# Copy the rest of the application code
+COPY . .
+
+# Set the PATH to include the virtual environment's bin directory
+# This ensures that executables like 'gunicorn' can be found.
+ENV PATH="/app/.venv/bin:$PATH"
+
+# Create a non-root user and change ownership for better security
+RUN addgroup --system app && adduser --system --group app
+RUN chown -R app:app /app
+USER app
 
 # Expose the port the application runs on
 EXPOSE 8000
 
-# Define the command to run when the container starts, using the ABSOLUTE PATH to the executable
-CMD ["/app/.venv/bin/gunicorn", "project.wsgi:application", "--bind", "0.0.0.0:8000"]
+# The command to run when the container starts.
+# It can now find 'gunicorn' thanks to the updated PATH.
+CMD ["gunicorn", "project.wsgi:application", "--bind", "0.0.0.0:8000"]
