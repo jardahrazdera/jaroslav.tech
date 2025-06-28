@@ -16,4 +16,4 @@ __pycache__/
 *env*/
 
 # Local database
-*.sqlite
+*.sqlite3
