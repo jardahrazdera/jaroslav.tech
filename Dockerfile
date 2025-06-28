@@ -30,6 +30,7 @@ COPY --from=builder /app/.venv ./.venv
 COPY . .
 
 # Set the PATH to include the virtual environment's bin directory
+# While we set this, we won't rely on it for the CMD for maximum reliability
 ENV PATH="/home/app/.venv/bin:$PATH"
 
 RUN chown -R app:app /home/app
@@ -38,6 +39,6 @@ USER app
 EXPOSE 8000
 
 # --- THIS IS THE CRITICAL FIX ---
-# Define the default command to run when the container starts.
-# It will use the correct PATH set above.
-CMD ["gunicorn", "project.wsgi:application", "--bind", "0.0.0.0:8000"]
+# Define the default command using the ABSOLUTE PATH to gunicorn.
+# This avoids any ambiguity with the $PATH environment variable.
+CMD ["/home/app/.venv/bin/gunicorn", "project.wsgi:application", "--bind", "0.0.0.0:8000"]
