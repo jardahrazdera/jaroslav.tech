@@ -1,0 +1,25 @@
+[project]
+name = "jaroslav-tech"
+version = "0.1.0"
+description = "Django App with CI/DC pipeline implementation"
+authors = [
+    {name = "jardahrazdera",email = "jarda.hrazdera@gmail.com"}
+]
+license = {text = "MIT"}
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "django (>=5.2.3,<6.0.0)",
+    "gunicorn (>=23.0.0,<24.0.0)",
+    "psycopg2-binary (>=2.9.10,<3.0.0)",
+    "dj-database-url (>=3.0.0,<4.0.0)",
+    "python-dotenv (>=1.1.1,<2.0.0)"
+]
+
+[tool.poetry]
+packages = [{include = "jaroslav"}]
+
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"
